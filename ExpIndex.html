@@ -51,6 +51,9 @@
       <ul id="userlist" ></ul>
     </div>
     </div>
+
+    <script src ="https://cdnjs.cloudflare.com/ajax/libs/axios/1.2.2/axios.min.js"></script>
+
     <script>
 
       function saveToLocalStorage(event) {
@@ -66,21 +69,44 @@
          description,
          category
        }
-      localStorage.setItem(obj.Expenseamount,JSON.stringify(obj))
-      showNewUserOnScreen(obj)
+
+       axios.post("https://crudcrud.com/api/9fcc589c38ae4a92a9358478ebad7b2a/expenseTracker",obj)
+       .then((response) =>{
+        showNewUserOnScreen(response.data)
+        console.log(response)
+       })
+       .catch((err) =>{
+        console.log(err)
+       })
+
+      // localStorage.setItem(obj.Expenseamount,JSON.stringify(obj))
+      // showNewUserOnScreen(obj)
        }
        
        
        window.addEventListener("DOMContentLoaded",()=>{
-        const  localStorageObj = localStorage;
-        const localstoragekeys=Object.keys(localStorageObj);
+        axios.get("https://crudcrud.com/api/9fcc589c38ae4a92a9358478ebad7b2a/expenseTracker")
+        .then((response) =>{
+          for(var i=0;i<response.data.length;i++){
+            showNewUserOnScreen(response.data[i])
+          }
+        console.log(response)
+        })
+        .catch((err) =>{
+        console.log(err)
+        }) 
+
+
+// geting details using local storage----------
+        // const  localStorageObj = localStorage;
+        // const localstoragekeys=Object.keys(localStorageObj);
   
-        for(var i=0;i<localstoragekeys.length;i++){
-          const key = localstoragekeys[i];
-          const userDetailsString = localStorageObj[key];
-          const userDetailsObj = JSON.parse(userDetailsString);
-    showNewUserOnScreen(userDetailsObj);
-  }
+        // for(var i=0;i<localstoragekeys.length;i++){
+        //   const key = localstoragekeys[i];
+        //   const userDetailsString = localStorageObj[key];
+        //   const userDetailsObj = JSON.parse(userDetailsString);
+        //   showNewUserOnScreen(userDetailsObj);
+        // }
 
 })
        
@@ -89,39 +115,71 @@
         document.getElementById('description').value ="";
         document.getElementById('category').value="";
         
-        if(localStorage.getItem(user.Expenseamount)!==null){
-          removeExpenseTrackerFromScreen(user.Expenseamount)
+        // if(localStorage.getItem(user.Expenseamount)!==null){
+        //   removeExpenseTrackerFromScreen(user.Expenseamount)
+        // }
+        if(user._id!=null){
+          removeExpenseTrackerFromScreen(user._id)
         }
 
         const parentNode = document.getElementById('userlist');
   
-        const childHTML  = `<li id=${user.Expenseamount}>${user.Expenseamount} - ${user.description} - ${user.category}
-                                        <button onclick=deleteuser('${user.Expenseamount}')> Delete </button>
-                                        <button onclick=editUserDetails('${user.Expenseamount}','${user.description}','${user.category}')>Edit </button>
+        const childHTML  = `<li id=${user._id}>${user.Expenseamount} - ${user.description} - ${user.category}
+                                        <button onclick=deleteuser('${user._id}')> Delete </button>
+                                        <button onclick=editUserDetails('${user.Expenseamount}','${user.description}','${user.category}','${user._id}')>Edit </button>
                                      </li>`
         
         parentNode.innerHTML = parentNode.innerHTML + childHTML;
 }
 
-function deleteuser(Expenseamount){
-  console.log(Expenseamount);
-  localStorage.removeItem(Expenseamount);
-  removeExpenseTrackerFromScreen(Expenseamount);
+function deleteuser(userId){
+  console.log(userId);
+axios.delete(`https://crudcrud.com/api/9fcc589c38ae4a92a9358478ebad7b2a/expenseTracker/${userId}`)
+.then((response) => {
+  removeExpenseTrackerFromScreen(userId);
+console.log(response)
+})
+.catch((err) =>{
+console.log(err)
+})
+
+  // delete using local storage--------------
+  // localStorage.removeItem(Expenseamount);
+  // removeExpenseTrackerFromScreen(Expenseamount);
 }
 
-function removeExpenseTrackerFromScreen(Expenseamount){
+function removeExpenseTrackerFromScreen(userId){
   const parentNode=document.getElementById('userlist');
-  const childNodeToBeDeleted = document.getElementById(Expenseamount);
+  const childNodeToBeDeleted = document.getElementById(userId);
   if (childNodeToBeDeleted){
     parentNode.removeChild(childNodeToBeDeleted)
   }
 }
 // Edit ExpenseTracker list
-function editUserDetails(Expenseamount,description,category){
-  document.getElementById('Expenseamount').value=Expenseamount;
-  document.getElementById('description').value=description;
-  document.getElementById('category').value=category;
-  deleteuser(Expenseamount);
+function editUserDetails(Expenseamount,description,category,userId){
+  const obj ={
+    Expenseamount,
+    description,
+    category
+  }
+  axios.put(`https://crudcrud.com/api/9fcc589c38ae4a92a9358478ebad7b2a/expenseTracker/${userId}`,obj)
+  .then(() => {
+      document.getElementById('Expenseamount').value=Expenseamount;
+      document.getElementById('description').value=description;
+      document.getElementById('category').value=category;
+      deleteuser(userId);
+  })
+  .catch((err) => {
+    console.log(err)
+  })
+
+
+
+  // edit details using localstorage-------------------
+  // document.getElementById('Expenseamount').value=Expenseamount;
+  // document.getElementById('description').value=description;
+  // document.getElementById('category').value=category;
+  // deleteuser(Expenseamount);
 }
 
 
